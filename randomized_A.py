@@ -20,16 +20,17 @@ def randomized_step(G, k):
             elif k_ < 0:
                 break 
             vertex_cover.append(edges[0][random.randint(0, 1)])
-            removed_edges[vertex_cover[-1]] = vertex_cover[-1].edgeList
+            removed_edges[vertex_cover[-1]] = deepcopy(vertex_cover[-1].edgeList)
             G.remove_node(vertex_cover[-1])
             removed_nodes.append(vertex_cover[-1])
             k_ = k_ - 1
-        if len(vertex_cover) > 0 and k_ >= 0:
+        if len(edges) == 0 and k_ >= 0:
             return vertex_cover
         for each in removed_nodes:
             G.add_node(each)
             for e in removed_edges[each]:
-                G.add_edge((e, each))
+                if (each.value, e.value) not in G.E():
+                    G.add_edge((e, each))
             
 def reduction_rule_1(G):
     """ If there are any isolated vertices, remove them """
@@ -78,11 +79,10 @@ if __name__ == "__main__":
     # n2 = Node(2)
     # n3 = Node(3)
     # n4 = Node(4)
-    # n0.add_edge(n1)
-    # n0.add_edge(n2)
+    # n0.add_edge(n3)
+    # n0.add_edge(n4)
     # n1.add_edge(n2)
     # n2.add_edge(n3)
-    # n2.add_edge(n4)
     # n3.add_edge(n4)
     # G  = Graph([n0, n1, n2, n3, n4])
     n = 5
