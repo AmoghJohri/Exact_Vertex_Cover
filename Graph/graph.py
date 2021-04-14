@@ -1,3 +1,4 @@
+from copy import deepcopy
 from .node import Node 
 
 class Graph:
@@ -6,6 +7,13 @@ class Graph:
         self.edges = edges 
         for each in self.nodes:
             edges[each] = each.edgeList
+
+    def get_edge_list(self):
+        out = []
+        for each in self.edges.keys():
+            for _ in self.edges[each]:
+                out.append((each, _))
+        return out 
 
     def get_node_by_value(self, value):
         for each in self.nodes:
@@ -22,7 +30,7 @@ class Graph:
         return out/2
 
     def add_node(self, node):
-        if node.value not in [each.values for each in self.nodes]:
+        if node.value not in [each.value for each in self.nodes]:
             self.nodes.append(node)
             self.edges[node] = []
         
