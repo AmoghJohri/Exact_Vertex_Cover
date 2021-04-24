@@ -159,26 +159,36 @@ def reduction_rule_7(G, k, vertex_cover):
         G.remove_node(each)
     return k - x
 
-def kernelization(G, k, vertex_cover, folded_vertices):
+def kernelization(G, k, vertex_cover, folded_vertices, reduction_rules = [1, 2, 3, 4, 5, 6, 7]):
+    _k = k
     while True:
-        reduction_rule_1(G)
-        _k = reduction_rule_2(G, k, vertex_cover)
-        if _k < 0:
-            return None
-        _k = reduction_rule_3(G, _k, vertex_cover)
-        if _k < 0:
-            return None
-        _k = reduction_rule_4(G, _k, vertex_cover)
-        if _k < 0:
-            return None
-        _k = reduction_rule_5(G, _k, vertex_cover, folded_vertices)
-        if _k < 0:
-            return None
-        if len(list(G.edges)) > 0:
-            _k = reduction_rule_6(G, _k, vertex_cover)
-        if _k < 0:
-            return None
-        _k = reduction_rule_7(G, _k, vertex_cover)
+        if 1 in reduction_rules:
+            reduction_rule_1(G)
+        if 2 in reduction_rules:
+            _k = reduction_rule_2(G, k, vertex_cover)
+            if _k < 0:
+                return None
+        if 3 in reduction_rules:
+            _k = reduction_rule_3(G, _k, vertex_cover)
+            if _k < 0:
+                return None
+        if 4 in reduction_rules:
+            _k = reduction_rule_4(G, _k, vertex_cover)
+            if _k < 0:
+                return None
+        if 5 in reduction_rules:
+            _k = reduction_rule_5(G, _k, vertex_cover, folded_vertices)
+            if _k < 0:
+                return None
+        if 6 in reduction_rules:
+            if len(list(G.edges)) > 0:
+                _k = reduction_rule_6(G, _k, vertex_cover)
+            if _k < 0:
+                return None
+        if 7 in reduction_rules:
+            _k = reduction_rule_7(G, _k, vertex_cover)
+            if _k < 0:
+                return None
         if _k < 0:
             return None
         elif _k == k:
@@ -186,7 +196,7 @@ def kernelization(G, k, vertex_cover, folded_vertices):
         else:
             k = _k
 
-def get_vertex_cover(G, k):
+def get_vertex_cover(G, k, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
     def unfold(cover, folded_vertices):
         i = 0
         while i < len(folded_vertices):
@@ -206,7 +216,7 @@ def get_vertex_cover(G, k):
             i = i + 1
     vertex_cover = []
     folded_vertices = []
-    k = kernelization(G, k, vertex_cover, folded_vertices)
+    k = kernelization(G, k, vertex_cover, folded_vertices, reduction_rules=reduction_rules)
     if k == None:
         # print("NO INSTANCE")
         return 
@@ -254,7 +264,7 @@ if __name__ == "__main__":
         G_copy = deepcopy(G)
         k = 10
         # drawCustomGraph(G)
-        vertex_covers = get_vertex_cover(G, k)
+        vertex_covers = get_vertex_cover(G, k, reduction_rules = [1, 2, 3, 4, 5, 6, 7])
         if vertex_covers:
             for each in vertex_covers:
                 test(deepcopy(G_copy), each)
