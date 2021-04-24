@@ -9,7 +9,7 @@ from   flow                import reduction_rule_6_helper
 from   crown_decomposition import crownDecomposition
 from   brute_force         import brute_force
 
-pivot = 100
+pivot = 10000
 
 def reduction_rule_1(G):
     """ remove isolated vertices """
@@ -218,12 +218,17 @@ def get_vertex_cover(G, k, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
     folded_vertices = []
     k = kernelization(G, k, vertex_cover, folded_vertices, reduction_rules=reduction_rules)
     if k == None:
-        # print("NO INSTANCE")
+        print("NO INSTANCE (after reduction rules)")
         return 
     else:
+        print("Performed Reductions")
+        print("New graph: ")
+        print("\t |V|: ", len(G.nodes))
+        print("\t |E|: ", len(G.edges))
+        print("Starting brute-force...")
         vertex_covers = brute_force(G, k)
         if vertex_covers == None:
-            # print("NO INSTANCE")
+            print("NO INSTANCE (after brute-force)")
             return 
         else:
             covers = []

@@ -29,4 +29,5 @@ def get_graph(code=5):
 
 if __name__ == "__main__":
     G = get_graph()
-    
+    print("|V|: ", len(G.nodes))
+    print("|E|: ", len(G.edges))
