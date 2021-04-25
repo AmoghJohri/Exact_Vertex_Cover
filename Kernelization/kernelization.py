@@ -1,6 +1,6 @@
 import progressbar
 import networkx            as nx 
-from   copy                import deepcopy
+from   util                import test
 from   util                import drawGraph
 from   util                import getCustomGraph
 from   util                import drawCustomGraph
@@ -8,6 +8,7 @@ from   util                import generateRandomGraph
 from   flow                import reduction_rule_6_helper
 from   crown_decomposition import crownDecomposition
 from   brute_force         import brute_force
+from   branching           import run_bnb
 
 pivot = 10000
 
@@ -196,7 +197,8 @@ def kernelization(G, k, vertex_cover, folded_vertices, reduction_rules = [1, 2, 
         else:
             k = _k
 
-def get_vertex_cover(G, k, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
+def get_vertex_cover(G, k, f, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
+    G = G.copy()
     def unfold(cover, folded_vertices):
         i = 0
         while i < len(folded_vertices):
@@ -218,17 +220,19 @@ def get_vertex_cover(G, k, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
     folded_vertices = []
     k = kernelization(G, k, vertex_cover, folded_vertices, reduction_rules=reduction_rules)
     if k == None:
-        print("NO INSTANCE (after reduction rules)")
+        # print("NO INSTANCE (after reduction rules)")
         return 
     else:
-        print("Performed Reductions")
-        print("New graph: ")
-        print("\t |V|: ", len(G.nodes))
-        print("\t |E|: ", len(G.edges))
-        print("Starting brute-force...")
-        vertex_covers = brute_force(G, k)
+        # print("Performed Reductions")
+        # print("New graph: ")
+        # print("\t |V|: ", len(G.nodes))
+        # print("\t |E|: ", len(G.edges))
+        # print("Starting brute-force...")
+        if f.__name__ == "run_bnb":
+            k = float('inf')
+        vertex_covers = f(G, k)
         if vertex_covers == None:
-            print("NO INSTANCE (after brute-force)")
+            # print("NO INSTANCE (after brute-force)")
             return 
         else:
             covers = []
@@ -238,45 +242,33 @@ def get_vertex_cover(G, k, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
                 unfold(covers[-1], folded_vertices)
             return covers
 
-def test(G, cover):
-    G_copy = deepcopy(G)
-    for each in cover:
-        try:
-            G.remove_node(each)
-        except:
-            print("Cover: ", cover)
-            drawGraph(G_copy)
-    if len(list(G.edges)) != 0:
-        drawCustomGraph(G_copy, cover)
-        print("Test-case failed!")
-
 def customTest():
     G = getCustomGraph()
-    G_copy = deepcopy(G)
+    G_copy = G.copy()
     cover = reduction_rule_6_helper(G)
     exit(0)
 
 if __name__ == "__main__":
     # customTest()
-    number_of_tests = 1000
+    number_of_tests = 10
     bar = progressbar.ProgressBar(maxval=number_of_tests, \
     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     print("Beginning Analysis...")
     bar.start()
     for i in range(number_of_tests):
-        bar.update(i+1)
-        G = generateRandomGraph(10, 0.1)
-        G_copy = deepcopy(G)
-        k = 10
+        G = generateRandomGraph(15, 0.1)
+        G_copy = G.copy()
+        k = len(list(G.nodes))
         # drawCustomGraph(G)
-        vertex_covers = get_vertex_cover(G, k, reduction_rules = [1, 2, 3, 4, 5, 6, 7])
+        vertex_covers = get_vertex_cover(G, k, brute_force, reduction_rules = [1, 2, 3, 4, 5, 6, 7])
         if vertex_covers:
             for each in vertex_covers:
-                test(deepcopy(G_copy), each)
+                test(G_copy.copy(), each)
         else:
             vertex_covers = brute_force(G_copy, k)
             if vertex_covers:
                 print("Test-case failed!")
                 # drawCustomGraph(G_copy, cover=each)
+        bar.update(i+1)
     bar.finish()
     print("Analysis Completed!")

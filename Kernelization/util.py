@@ -52,3 +52,15 @@ def drawCustomGraph(G, cover = []):
         y_values = [pos[each[0]][1], pos[each[1]][1]]
         plt.plot(x_values, y_values, color='g')
     plt.show()
+
+def test(G, cover):
+    G_copy = G.copy()
+    for each in cover:
+        try:
+            G.remove_node(each)
+        except:
+            print("Cover: ", cover)
+            drawGraph(G_copy)
+    if len(list(G.edges)) != 0:
+        drawCustomGraph(G_copy, cover)
+        print("Test-case failed!")

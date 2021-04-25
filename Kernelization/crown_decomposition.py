@@ -1,6 +1,4 @@
 import networkx    as nx 
-from   copy        import deepcopy
-
 from   util        import drawGraph
 from   util        import getCustomGraph
 from   util        import drawCustomGraph
