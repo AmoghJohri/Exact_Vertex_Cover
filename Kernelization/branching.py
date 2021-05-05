@@ -1,190 +1,96 @@
 import networkx as nx 
+from brute_force import brute_force
+from util import test
 from util import generateRandomGraph
 from util import drawGraph
 from util import drawCustomGraph
-# implementation of branch_and_bound algorithm
-import approximation as approx
-from priorityQueue import indexMinPQ
-import operator
-import time
-import cProfile
-import os
-import os.path
 
+class ExecutionState:
+    def __init__(self, G, removed_edges = [], vertex_cover = []):
+        self.G              = G 
+        self.removed_edges  = removed_edges
+        self.vertex_cover   = vertex_cover
 
-class bnb:
+def get_max_degree_vertex(G):
+    nodes = list(G.nodes)
+    if nodes:
+        max_degree_node = nodes[0]
+        for each in nodes:
+            if G.degree(max_degree_node) < G.degree(each):
+                max_degree_node = each 
+        return max_degree_node
+    return None
 
-	def intersection(self, a, b):
-	    """compute intersection of two list, doesn't preserve order"""
-	    return list(set(a) & set(b))
+def remove_isolated_vertices(G):
+    for each in list(G.nodes):
+        if G.degree(each) == 0:
+            G.remove_node(each)
 
-	def lower_bound_edge_deletion(self, H):
-	    """return the lower bound of min-vc for graph H, using edge delection algorithm"""
-	    solver = approx.approximation()
-	    return len(solver.edge_deletion(H))/2
+def branching(G):
+    G               = G.copy()
+    G_copy          = G.copy()
+    current_best    = (len(list(G.nodes)), tuple(list(G.nodes)))
+    if current_best[0] == 0:
+        return [list(current_best[1])]
+    stack           = []
+    max_degree_node = get_max_degree_vertex(G) # get the maximum degree vertex
+    removed_edges   = list(G.edges(max_degree_node)) # list of all the edges adjacent to the maximum degree vertex
+    vertex_cover    = [max_degree_node] # add the maximum degree vertex in the vertex-cover
+    G.remove_edges_from(removed_edges) # remove all edges adjacent to the maximum degree vertex
+    # remove all isolated vertices
+    remove_isolated_vertices(G)
+    stack.append(ExecutionState(G, removed_edges, vertex_cover)) # append this state to stack
+    neighbors       = list(G_copy.neighbors(max_degree_node)) # get all neighbors of the maximum degree vertex
+    vertex_cover_   = list(neighbors) # the vertex cover has all the neighbors of the vertex
+    removed_edges_  = [] 
+    # list of all the edges adjacent to the neighbors of the maximum degree vertex
+    for each in neighbors:
+        removed_edges_.extend(G_copy.edges(each))
+    G_copy.remove_edges_from(removed_edges_) # removing the equired edges
+    # removing all isolated vertices
+    remove_isolated_vertices(G_copy)
+    stack.append(ExecutionState(G_copy, removed_edges_, vertex_cover_)) # append this state to stack
+    # while stack is non-empty
+    while stack:
+        eState        = stack.pop(-1)
+        G             = eState.G 
+        removed_edges = eState.removed_edges
+        vertex_cover  = eState.vertex_cover
+        if not list(G.edges):
+            if len(vertex_cover) < current_best[0]:
+                current_best = (len(vertex_cover), tuple(vertex_cover))
+        else:
+            G_copy = G.copy()
+            max_degree_node = get_max_degree_vertex(G)
+            removed_edges   = list(G.edges(max_degree_node))
+            vertex_cover.append(max_degree_node)
+            G.remove_edges_from(removed_edges)
+            remove_isolated_vertices(G)
+            stack.append(ExecutionState(G, removed_edges, vertex_cover))
+            neighbors       = list(G_copy.neighbors(max_degree_node))
+            if len(vertex_cover) + len(neighbors) - 1 < current_best[0]:
+                vertex_cover_   = list(vertex_cover)
+                vertex_cover_.remove(max_degree_node)
+                vertex_cover_.extend(neighbors)
+                removed_edges_  = []
+                for each in neighbors:
+                    removed_edges_.extend(G_copy.edges(each))
+                G_copy.remove_edges_from(removed_edges_)
+                remove_isolated_vertices(G_copy)
+                stack.append(ExecutionState(G_copy, removed_edges_, vertex_cover_))
+    return [list(current_best[1])]
 
-	def lower_bound_max_matching(self, H):
-	    """return the lower bound of min-vc for graph H, using max matching algorithm.
-	    Recall in a graph H, any matching as size less than or equal to any vc,
-	    so |max matching| <= |min-vc|. In particular, in a bipartite graph, "=" is
-	    attained. This uses networkx.max_weight_matching, which uses Edmonds' algorithm"""	
-	    # divided by 2 since nx.max_weight_matching() returns a dict
-	    #  which repeats every edge in M  twice.
-	    return len(nx.max_weight_matching(H))/2
-
-	def approx_edge_delection(self, H):
-	    """return the approx vc using the edge delection algorithm"""
-	    solver = approx.approximation()
-	    return solver.edge_deletion(H)
-
-	def max_degree_vertex(self, G, sub_V):
-		"""return the max degree vertex among the vertices in sub_V in graph G"""
-		if not set(sub_V) <= set(G.nodes()):
-		    raise KeyError("max_degree_vertex(): vertices are not all in the graph")
-		    return None
-		if not sub_V:
-			return None
-		v = sub_V[0]
-		for each in sub_V:
-			if G.degree(each) > G.degree(v):
-				v = each 
-		return v
-
-	def residual_graph(self, G, removal_V):
-	    """return the residual graph after removing all the vertices in the removal_V
-	    list, and all the vertices whose neighbor are all in removal_V"""
-	    if not isinstance(removal_V, list):
-	        removal_V = [removal_V]
-	    return [ v for v in G.nodes() if (v not in removal_V
-	                             and not set(G.neighbors(v)) < set(removal_V)) ]
-
-	def isCover(self, sub_V, G):
-	    """return True if sub_V is a vertex cover for G"""
-	    for e in G.edges_iter():
-	        if e[0] not in sub_V and e[1] not in sub_V:
-	            return False
-	    return True
-
-	def still_is_cover(self, node, sub_V, G):
-	    is_cover = True
-	    neighbors = set(G.neighbors(node))
-	    if len(neighbors) > 0 and not neighbors <= set(sub_V):
-	        is_cover = False
-	    return is_cover
-
-	def bnb_edge_delection(self, G, cutoff_time, trace_file, result_file, update_rate_0 = 10):
-		"""compute the min-vc using branch and bound
-		   input: G - a networkx Graph object,
-		          cutoff_time: cutoff_time in seconds
-		          trace_file: the trace file name
-		          result_file: the result file name
-		          update_rate_0: a parameter that controls
-		                         how frequently we recompute lower bounds
-		   output: a tuple: (size_of_min_vc, min_vc),
-		           size_of_min_vc is an integer
-		           min_vc is a list of vertices
-		   side effects: save trace_file and result_file"""	
-		output_trace = open(trace_file, 'w')
-		start_time = time.time()
-		# if the graph is large (with more than 10000 nodes), we dynamically adjust
-		#  the update rate
-		if G.number_of_nodes() > 10000:
-		    update_rate_0 = G.number_of_nodes()/500
-		if update_rate_0== 0:
-		    update_rate_0 = 1	
-		sub_problems = indexMinPQ()
-		#initial_lb = self.lower_bound_edge_deletion(G)
-		approx_solution = self.approx_edge_delection(G)
-		initial_lb = len(approx_solution)/2
-		sub_problems.push( (None, tuple(G.nodes()), tuple(G.nodes()), initial_lb),
-		                    G.number_of_edges())	
-		# update the current_best to the approx solution
-		current_best = (len(approx_solution), approx_solution)	
-		# output one trace line
-		current_time = time.time() - start_time
-		output_trace.write("%.2f,%d\n" %(current_time, current_best[0]))	
-		counter = 0	
-		while not sub_problems.isEmpty():
-			sub_p = sub_problems.pop()	
-			if sub_p[0] is None:
-			    sub_cover = []
-			else:
-			    sub_cover = list(sub_p[0])                      # C in the pseudocode
-			available_vertices = list(sub_p[1])                 # A in the pseudocode
-			remaining_graph = G.subgraph(list(sub_p[2]))        # G' in the pseudocode
-			current_lb = sub_p[3]	
-			if current_lb >= current_best[0]:
-			    pass
-			if len(sub_p[2]) < 500:
-			    update_rate = 1
-			else:
-			    update_rate = update_rate_0	
-			max_degree_v = self.max_degree_vertex(remaining_graph, available_vertices) # v in the pseudocode	
-			# the first expansion: add v to the partial cover
-			cover_add_v = list(sub_cover)
-			cover_add_v.append(max_degree_v)   # C_1 = C \union v
-			new_residual_vertices = self.residual_graph(remaining_graph, max_degree_v)  # V'_1
-			new_available_vertices = self.intersection(new_residual_vertices, available_vertices)  # A'_1 = A \cap V'_1
-			new_residual_graph = G.subgraph(new_residual_vertices)	
-			if nx.number_of_edges( new_residual_graph ) == 0:       # cover_add_v is a vc
-			    if len(cover_add_v) < current_best[0]:              # update the current_best
-			        current_best = (len(cover_add_v), cover_add_v)	
-			        current_time = time.time() - start_time
-			        output_trace.write("%.2f,%d\n" %(current_time, current_best[0]))	
-			elif len(new_available_vertices) > 0:                  # check it is not dead end
-			    # only recompute the lower bound every update_rate steps
-			    #  otherwise, we just use the previous lower bound (note this is still
-			    #    a lower bound, although it may not be as tight at the recomputed lb)
-			    if counter % update_rate == 0:
-			        lb = len(cover_add_v) + self.lower_bound_edge_deletion(new_residual_graph)
-			        counter = 0
-			    else:
-			        lb = current_lb
-			    counter += 1
-			    if lb < current_best[0]:                           # add to the subproblems queue
-			        sub_problems.push((tuple(cover_add_v), tuple(new_available_vertices),
-			                           tuple(new_residual_vertices), lb),
-			                           new_residual_graph.number_of_edges())	
-		    # the second expansion: mark v as not selected
-			cover_unselect_v = list(sub_cover)
-			available_vertices_delete_v = list(available_vertices)
-			if not max_degree_v:
-				break
-			available_vertices_delete_v.remove(max_degree_v)	
-		    # cover_unselect_v is the same as parent node, so it is not a vc
-		    # check it is not a dead end
-		    #   lower bound is the same as parent node, if it is less
-		    #         than the current best, add it to subproblems queue
-			if len(available_vertices_delete_v) > 0 and self.still_is_cover(max_degree_v, available_vertices_delete_v, remaining_graph):
-			    if current_lb < current_best[0]:
-			        sub_problems.push((tuple(cover_unselect_v), tuple(available_vertices_delete_v),
-			                           sub_p[2], current_lb), remaining_graph.number_of_edges())	
-			# after cutoff_time, terminate and return the current best
-			if time.time() - start_time > cutoff_time:
-			    break	
-		output_trace.close()
-		result = list(current_best[1])
-		return result
-
-def	run_bnb(G, cutoff_time=float('inf')):
-	"""this function provides an uniform interface for the other functions to call
-	   input: a networkx graph
-	   output: none
-	   side effect: save the trace file and solution file"""
-	bnb_solver = bnb()
-	filename = "graph"
-	output_sol = "./output/" + filename + "_BnB_" + str(cutoff_time) + ".sol"
-	output_trace = "./output/" + filename + "_BnB_" + str(cutoff_time) + ".trace"	
-	try:
-	    os.makedirs("./output")
-	except OSError:
-	    if not os.path.isdir("./output"):
-	        raise	
-	return [bnb_solver.bnb_edge_delection(G, cutoff_time, output_trace, output_sol)]
-
-if __name__ == '__main__':
-	G = nx.Graph()
-	G.add_edge(0, 1)
-	G.add_edge(2, 3)
-	cover = run_bnb(G)
-	drawCustomGraph(G, cover=cover[0])
+if __name__ == "__main__":
+    G = nx.Graph()
+    G.add_node(1)
+    check = 0
+    for i in range(100):
+        G = generateRandomGraph(30, 0.1)
+        cover1 = branching(G)[0]
+        if check:
+            cover2 = brute_force(G)[0]
+            if len(cover1) != len(cover2):
+                print("Something Went Wrong")
+                print("Branching: ", cover1)
+                print("Brute-Force: ", cover2)
+        test(G, cover1)
