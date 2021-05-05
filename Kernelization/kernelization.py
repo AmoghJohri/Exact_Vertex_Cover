@@ -8,7 +8,7 @@ from   util                import generateRandomGraph
 from   flow                import reduction_rule_6_helper
 from   crown_decomposition import crownDecomposition
 from   brute_force         import brute_force
-from   branching           import run_bnb
+from   branching           import branching
 
 pivot = 10000
 
@@ -228,9 +228,7 @@ def get_vertex_cover(G, k, f, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
         # print("\t |V|: ", len(G.nodes))
         # print("\t |E|: ", len(G.edges))
         # print("Starting brute-force...")
-        if f.__name__ == "run_bnb":
-            k = float('inf')
-        vertex_covers = f(G, k)
+        vertex_covers = f(G)
         if vertex_covers == None:
             # print("NO INSTANCE (after brute-force)")
             return 
@@ -250,17 +248,17 @@ def customTest():
 
 if __name__ == "__main__":
     # customTest()
-    number_of_tests = 10
+    number_of_tests = 50
     bar = progressbar.ProgressBar(maxval=number_of_tests, \
     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     print("Beginning Analysis...")
     bar.start()
     for i in range(number_of_tests):
-        G = generateRandomGraph(15, 0.1)
+        G = generateRandomGraph(50, 0.1)
         G_copy = G.copy()
         k = len(list(G.nodes))
         # drawCustomGraph(G)
-        vertex_covers = get_vertex_cover(G, k, brute_force, reduction_rules = [1, 2, 3, 4, 5, 6, 7])
+        vertex_covers = get_vertex_cover(G, k, branching, reduction_rules = [1, 2, 3, 4, 5, 6, 7])
         if vertex_covers:
             for each in vertex_covers:
                 test(G_copy.copy(), each)

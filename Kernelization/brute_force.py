@@ -3,6 +3,7 @@ import progressbar
 import itertools
 
 def brute_force(G, k=-1, one_cover=True):
+    G = G.copy()
     if k == -1:
         k = len(list(G.nodes))
     vertex_covers = []
