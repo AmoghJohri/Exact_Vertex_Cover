@@ -1,6 +1,6 @@
 import random
-import numpy as np
-import networkx as nx
+import numpy             as np
+import networkx          as nx
 import matplotlib.pyplot as plt 
 
 def getCustomGraph():

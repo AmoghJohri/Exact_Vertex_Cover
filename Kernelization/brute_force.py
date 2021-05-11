@@ -1,6 +1,6 @@
-import networkx as nx 
-import progressbar
 import itertools
+import progressbar
+import networkx as nx 
 
 def brute_force(G, k=-1, one_cover=True):
     G = G.copy()

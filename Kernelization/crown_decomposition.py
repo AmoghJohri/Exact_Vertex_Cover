@@ -6,7 +6,7 @@ from   util        import generateRandomGraph
 
 def crownDecomposition(G):
     M1 = nx.maximal_matching(G)
-    O = list(G.nodes)
+    O  = list(G.nodes)
     for each in M1:
         u, v = each 
         try:
@@ -27,8 +27,8 @@ def crownDecomposition(G):
         u, v = each 
         if (u in O and v in NO) or (u in NO and v in O):
             S.add_edge(u, v)
-    M2 = nx.max_weight_matching(S, maxcardinality=True)
-    I0 = O 
+    M2    = nx.max_weight_matching(S, maxcardinality=True)
+    I0    = O 
     G_aux = nx.Graph()
     for each in M2:
         u, v = each 
@@ -42,14 +42,12 @@ def crownDecomposition(G):
         except:
             pass 
     Iprev = I0 
-    # check = G.subgraph(Iprev)
-    # drawGraph(check)
     while True:
         Hprev = []
         for each in Iprev:
             Hprev.extend(list(G.neighbors(each)))
         Hprev = list(set(Hprev))
-        I_ = []
+        I_    = []
         for each in Hprev:
             if G_aux.has_node(each):
                 I_.extend(list(G_aux.neighbors(each)))
@@ -61,7 +59,7 @@ def crownDecomposition(G):
 
 if __name__ == "__main__":
     for i in range(10000):
-        G = generateRandomGraph(15, 0.1)
+        G    = generateRandomGraph(15, 0.1)
         H, I = crownDecomposition(G)
         if len(list(set(H).intersection(set(I)))) != 0:
             print("Test Case Failed!")

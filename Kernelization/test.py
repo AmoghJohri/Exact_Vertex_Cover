@@ -1,9 +1,8 @@
 import os 
 import statistics
-import networkx as nx 
 import progressbar
-
-from util import drawGraph
+import networkx as nx 
+from   util     import drawGraph
 
 def get_graph(code=5):
     if code < 10:
@@ -13,26 +12,26 @@ def get_graph(code=5):
     else:
         code = str(code)
     file_name = os.getcwd() + "/public/" + "vc-exact_" + code + ".gr"
-    f = open(file_name, 'r')
-    i = 0
-    G = nx.Graph()
+    f         = open(file_name, 'r')
+    i         = 0
+    G         = nx.Graph()
     for line in f:
         if i == 0:
-            var = line.split()
+            var      = line.split()
             vertices = int(var[-2])
-            edges = int(var[-1])
+            edges    = int(var[-1])
         else:
             var = line.split()
-            n1 = int(var[0])
-            n2 = int(var[1])
+            n1  = int(var[0])
+            n2  = int(var[1])
             G.add_edge(n1,n2)
         i = i + 1
     return G
 
 if __name__ == "__main__":
-    p_arr = []
-    bar = progressbar.ProgressBar(maxval=201, \
-    widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    p_arr  = []
+    bar    = progressbar.ProgressBar(maxval=201, \
+    widgets= [progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     bar.start()
     for i in range(1, 200, 2):
         G = get_graph(code=i)

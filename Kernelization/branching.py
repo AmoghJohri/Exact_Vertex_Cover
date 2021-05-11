@@ -1,9 +1,10 @@
-import networkx as nx 
-from brute_force import brute_force
-from util import test
-from util import generateRandomGraph
-from util import drawGraph
-from util import drawCustomGraph
+import time 
+import networkx    as nx 
+from   util        import test
+from   util        import generateRandomGraph
+from   util        import drawGraph
+from   util        import drawCustomGraph
+from   brute_force import brute_force
 
 class ExecutionState:
     def __init__(self, G, removed_edges = [], vertex_cover = []):
@@ -81,12 +82,13 @@ def branching(G):
     return [list(current_best[1])]
 
 if __name__ == "__main__":
-    G = nx.Graph()
-    G.add_node(1)
+    n     = 150
     check = 0
-    for i in range(100):
-        G = generateRandomGraph(30, 0.1)
-        cover1 = branching(G)[0]
+    for i in range(1):
+        G        = generateRandomGraph(n, 0.1)
+        start    = time.time()
+        cover1   = branching(G)[0]
+        duration = time.time() - start
         if check:
             cover2 = brute_force(G)[0]
             if len(cover1) != len(cover2):
@@ -94,3 +96,4 @@ if __name__ == "__main__":
                 print("Branching: ", cover1)
                 print("Brute-Force: ", cover2)
         test(G, cover1)
+        print("Time taken for " + str(n) + " nodes: " + str(duration) + " seconds!")

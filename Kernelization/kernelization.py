@@ -10,7 +10,7 @@ from   crown_decomposition import crownDecomposition
 from   brute_force         import brute_force
 from   branching           import branching
 
-pivot = 10000
+pivot = 10000000
 
 def reduction_rule_1(G):
     """ remove isolated vertices """
@@ -22,7 +22,7 @@ def reduction_rule_1(G):
 def reduction_rule_2(G, k, vertex_cover):
     """ remove vertices with degree greater than k """
     nodes = list(G.nodes)
-    i = 0
+    i     = 0
     while i < len(nodes):
         node = nodes[i]
         if G.degree(node) > k:
@@ -40,7 +40,7 @@ def reduction_rule_2(G, k, vertex_cover):
 def reduction_rule_3(G, k, vertex_cover):
     """ remove pendant vertices' neighbor """
     nodes = list(G.nodes)
-    i = 0
+    i     = 0
     while i < len(nodes):
         node = nodes[i]
         if G.degree(node) == 1:
@@ -61,7 +61,7 @@ def reduction_rule_3(G, k, vertex_cover):
 def reduction_rule_4(G, k, vertex_cover):
     """ include adjacent neighbors for vertex of degree 2 """
     nodes = list(G.nodes)
-    i = 0
+    i     = 0
     while i < len(nodes):
         node = nodes[i]
         if G.degree(node) == 2:
@@ -85,7 +85,7 @@ def reduction_rule_4(G, k, vertex_cover):
 
 def reduction_rule_5(G, k, vertex_cover, folded_vertices):
     nodes = list(G.nodes)
-    i = 0
+    i     = 0
     while i < len(nodes):
         node = nodes[i]
         if G.degree(node) == 2:
@@ -138,7 +138,7 @@ def reduction_rule_6(G, k, vertex_cover):
             G.nodes[each]['weight'] = 0
         for each in cover:
             G.nodes[abs(each)-1]['weight'] += 0.5
-    x = 0
+    x     = 0
     nodes = list(G.nodes)
     for each in nodes:
         if G.nodes[each]['weight'] == 1:
@@ -151,7 +151,7 @@ def reduction_rule_6(G, k, vertex_cover):
 def reduction_rule_7(G, k, vertex_cover):
     reduction_rule_1(G)
     H, I = crownDecomposition(G)
-    x = 0
+    x    = 0
     for each in H:
         G.remove_node(each)
         vertex_cover.append(each)
@@ -216,18 +216,13 @@ def get_vertex_cover(G, k, f, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
                 else:
                     cover.append(int(_node[-(len(_node)-1):]))
             i = i + 1
-    vertex_cover = []
+    vertex_cover    = []
     folded_vertices = []
-    k = kernelization(G, k, vertex_cover, folded_vertices, reduction_rules=reduction_rules)
+    k               = kernelization(G, k, vertex_cover, folded_vertices, reduction_rules=reduction_rules)
     if k == None:
         # print("NO INSTANCE (after reduction rules)")
         return 
     else:
-        # print("Performed Reductions")
-        # print("New graph: ")
-        # print("\t |V|: ", len(G.nodes))
-        # print("\t |E|: ", len(G.edges))
-        # print("Starting brute-force...")
         vertex_covers = f(G)
         if vertex_covers == None:
             # print("NO INSTANCE (after brute-force)")
@@ -241,22 +236,22 @@ def get_vertex_cover(G, k, f, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
             return covers
 
 def customTest():
-    G = getCustomGraph()
+    G      = getCustomGraph()
     G_copy = G.copy()
-    cover = reduction_rule_6_helper(G)
+    cover  = reduction_rule_6_helper(G)
     exit(0)
 
 if __name__ == "__main__":
     # customTest()
     number_of_tests = 50
-    bar = progressbar.ProgressBar(maxval=number_of_tests, \
-    widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    bar             = progressbar.ProgressBar(maxval=number_of_tests, \
+    widgets         = [progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     print("Beginning Analysis...")
     bar.start()
     for i in range(number_of_tests):
-        G = generateRandomGraph(50, 0.1)
+        G      = generateRandomGraph(50, 0.1)
         G_copy = G.copy()
-        k = len(list(G.nodes))
+        k      = len(list(G.nodes))
         # drawCustomGraph(G)
         vertex_covers = get_vertex_cover(G, k, branching, reduction_rules = [1, 2, 3, 4, 5, 6, 7])
         if vertex_covers:

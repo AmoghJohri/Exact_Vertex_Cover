@@ -1,7 +1,7 @@
-import networkx as nx 
-from networkx.algorithms.flow import dinitz
-from util import drawGraph
-from util import drawCustomGraph
+import networkx                 as nx 
+from   util                     import drawGraph
+from   util                     import drawCustomGraph
+from   networkx.algorithms.flow import dinitz
 
 def makeBipartiteGraph(G):
     H = nx.DiGraph()
@@ -25,10 +25,10 @@ def makeBipartiteGraph(G):
     return H
 
 def getMaximumMatching(H):
-    source = min(list(H.nodes))
-    sink = max(list(H.nodes))
+    source                = min(list(H.nodes))
+    sink                  = max(list(H.nodes))
     flow_value, flow_dict = nx.maximum_flow(H, source, sink, flow_func=dinitz)
-    M = nx.Graph()
+    M                     = nx.Graph()
     M.add_nodes_from(list(H.nodes))
     for each in list(H.edges):
         u, v = each 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     H.add_nodes_from([-(i+1) for i in range(5)])
     H.add_nodes_from([(i+1) for i in range(5)])
     source = min(list(H.nodes)) - 1
-    sink = max(list(H.nodes)) + 1
+    sink   = max(list(H.nodes)) + 1
     H.add_node(source)
     H.add_node(sink)
     H.add_edge(-1, 1, capcity=1)
