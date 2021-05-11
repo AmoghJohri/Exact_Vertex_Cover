@@ -5,6 +5,7 @@ import networkx as nx
 from   util     import drawGraph
 
 def get_graph(code=5):
+    # get a graph from the PACE dataset
     if code < 10:
         code = "00" + str(code)
     elif code < 100:

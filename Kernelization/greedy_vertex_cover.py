@@ -7,6 +7,7 @@ from   branching  import get_max_degree_vertex
 from   branching  import branching
 
 def greedyVertexCover(G):
+    # greedy vertex cover (keep removing the vertex with maximum degree)
     G            = G.copy()
     vertex_cover = []
     while list(G.edges):

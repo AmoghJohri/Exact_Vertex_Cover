@@ -4,6 +4,7 @@ import networkx          as nx
 import matplotlib.pyplot as plt 
 
 def getCustomGraph():
+    # generate a custom graph
     G = nx.Graph()
     G.add_nodes_from(range(0, 15))
     G.add_edges_from([(0, 1), (0, 9), (0, 12), (0, 13)])
@@ -20,6 +21,7 @@ def getCustomGraph():
     return G 
 
 def generateRandomGraph(n, p):
+    # generate a random graph based on the number of nodes and the probability of an edge between each pair of  nodes
     G = nx.Graph()
     G.add_nodes_from(range(0, n))
     for i in G.nodes:
@@ -30,14 +32,16 @@ def generateRandomGraph(n, p):
     return G
 
 def drawGraph(G):
+    # draw the graph
     nx.draw(G, with_labels=True, font_weight='bold')
     plt.show()
 
 def drawCustomGraph(G, cover = []):
+    # draw the graph along with the cover
     nodes = list(G.nodes)
     pos   = []
     edges = list(G.edges)
-    diff  = 360/len(nodes)
+    diff  = 360/(len(nodes) + 1)
     for i in range(len(nodes)):
         x = np.cos(np.radians(i*diff))
         y = np.sin(np.radians(i*diff))
@@ -54,6 +58,7 @@ def drawCustomGraph(G, cover = []):
     plt.show()
 
 def test(G, cover):
+    # test whether a given cover is a valid vertex cover
     G_copy = G.copy()
     for each in cover:
         try:

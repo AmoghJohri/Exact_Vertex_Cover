@@ -5,6 +5,7 @@ from   util      import drawCustomGraph
 from   branching import branching
 
 def approxVertexCover(G):
+    # 2-approximate algorithm for obtaining the vertex cover
     G            = G.copy()
     vertex_cover = []
     while list(G.edges):

@@ -28,6 +28,7 @@ def remove_isolated_vertices(G):
             G.remove_node(each)
 
 def branching(G):
+    # stack based DFS to perform branching
     G               = G.copy()
     G_copy          = G.copy()
     current_best    = (len(list(G.nodes)), tuple(list(G.nodes)))
@@ -53,38 +54,42 @@ def branching(G):
     stack.append(ExecutionState(G_copy, removed_edges_, vertex_cover_)) # append this state to stack
     # while stack is non-empty
     while stack:
-        eState        = stack.pop(-1)
-        G             = eState.G 
-        removed_edges = eState.removed_edges
-        vertex_cover  = eState.vertex_cover
+        eState        = stack.pop(-1) # current statae
+        G             = eState.G # get the current graph
+        removed_edges = eState.removed_edges # get the edges that had been removed in the last step
+        vertex_cover  = eState.vertex_cover # get the current vertex cover
+        # if we have a vertex cover
         if not list(G.edges):
+            # if the vertex cover is smaller than the current best, then make it the current best
             if len(vertex_cover) < current_best[0]:
                 current_best = (len(vertex_cover), tuple(vertex_cover))
         else:
-            G_copy = G.copy()
-            max_degree_node = get_max_degree_vertex(G)
-            removed_edges   = list(G.edges(max_degree_node))
-            vertex_cover.append(max_degree_node)
-            G.remove_edges_from(removed_edges)
-            remove_isolated_vertices(G)
-            stack.append(ExecutionState(G, removed_edges, vertex_cover))
-            neighbors       = list(G_copy.neighbors(max_degree_node))
-            if len(vertex_cover) + len(neighbors) - 1 < current_best[0]:
-                vertex_cover_   = list(vertex_cover)
-                vertex_cover_.remove(max_degree_node)
-                vertex_cover_.extend(neighbors)
+            G_copy          = G.copy() # get a copy of G
+            max_degree_node = get_max_degree_vertex(G) # get the max. degree node
+            removed_edges   = list(G.edges(max_degree_node)) # get the list of edges from the max. degree node (these shall be removed)
+            vertex_cover.append(max_degree_node) # append the max. degree node in the vertex cover
+            G.remove_edges_from(removed_edges) # remove all the edges (all neighbors from the max. degree node)
+            remove_isolated_vertices(G) # remove all isolated vertices (it messes up the implementation if there are any of these present)
+            stack.append(ExecutionState(G, removed_edges, vertex_cover)) # append this state to the stack
+            neighbors       = list(G_copy.neighbors(max_degree_node)) # get the neighbors of the max. degree node
+            if len(vertex_cover) + len(neighbors) - 1 < current_best[0]: # if we can afford to remove all the neighbors, and be better than current best, we procede
+                vertex_cover_   = list(vertex_cover) 
+                vertex_cover_.remove(max_degree_node) # remove the max. degree node from the cover
+                vertex_cover_.extend(neighbors) # add all its neighbors in the vertex cover instead
                 removed_edges_  = []
+                # remove all the edges stemming from the neighbors of the max. degree node
                 for each in neighbors:
                     removed_edges_.extend(G_copy.edges(each))
-                G_copy.remove_edges_from(removed_edges_)
-                remove_isolated_vertices(G_copy)
-                stack.append(ExecutionState(G_copy, removed_edges_, vertex_cover_))
-    return [list(current_best[1])]
+                G_copy.remove_edges_from(removed_edges_) # get the new graph by removing these edges
+                remove_isolated_vertices(G_copy) # remove all isolated nodes
+                stack.append(ExecutionState(G_copy, removed_edges_, vertex_cover_)) # add this state to the stack
+    return [list(current_best[1])] # when the stack is empty, we return the best vertex cover found
 
 if __name__ == "__main__":
-    n     = 150
-    check = 0
-    for i in range(1):
+    n     = 10
+    check = 1
+    draw  = 1
+    for i in range(10):
         G        = generateRandomGraph(n, 0.1)
         start    = time.time()
         cover1   = branching(G)[0]
@@ -95,5 +100,7 @@ if __name__ == "__main__":
                 print("Something Went Wrong")
                 print("Branching: ", cover1)
                 print("Brute-Force: ", cover2)
+        if draw:
+            drawCustomGraph(G, cover=cover1)
         test(G, cover1)
         print("Time taken for " + str(n) + " nodes: " + str(duration) + " seconds!")

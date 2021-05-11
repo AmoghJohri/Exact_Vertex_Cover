@@ -84,6 +84,7 @@ def reduction_rule_4(G, k, vertex_cover):
     return k
 
 def reduction_rule_5(G, k, vertex_cover, folded_vertices):
+    """ Vertex Folding """
     nodes = list(G.nodes)
     i     = 0
     while i < len(nodes):
@@ -129,6 +130,7 @@ def reduction_rule_5(G, k, vertex_cover, folded_vertices):
     return k
 
 def reduction_rule_6(G, k, vertex_cover):
+    """ Network Flow """
     cover = reduction_rule_6_helper(G)
     if max(cover) < 0:
         for each in list(G.nodes):
@@ -149,6 +151,7 @@ def reduction_rule_6(G, k, vertex_cover):
     return k - x
 
 def reduction_rule_7(G, k, vertex_cover):
+    """ Crown Decomposition """
     reduction_rule_1(G)
     H, I = crownDecomposition(G)
     x    = 0
@@ -161,6 +164,7 @@ def reduction_rule_7(G, k, vertex_cover):
     return k - x
 
 def kernelization(G, k, vertex_cover, folded_vertices, reduction_rules = [1, 2, 3, 4, 5, 6, 7]):
+    """ Apply all the reduction rules """
     _k = k
     while True:
         if 1 in reduction_rules:
@@ -198,6 +202,7 @@ def kernelization(G, k, vertex_cover, folded_vertices, reduction_rules = [1, 2, 
             k = _k
 
 def get_vertex_cover(G, k, f, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
+    """ Get the vertex cover """
     G = G.copy()
     def unfold(cover, folded_vertices):
         i = 0
@@ -236,6 +241,7 @@ def get_vertex_cover(G, k, f, reduction_rules  = [1, 2, 3, 4, 5, 6, 7]):
             return covers
 
 def customTest():
+    """ Generate a custom graph to test the algorithms """
     G      = getCustomGraph()
     G_copy = G.copy()
     cover  = reduction_rule_6_helper(G)
@@ -249,7 +255,7 @@ if __name__ == "__main__":
     print("Beginning Analysis...")
     bar.start()
     for i in range(number_of_tests):
-        G      = generateRandomGraph(50, 0.1)
+        G      = generateRandomGraph(30, 0.1)
         G_copy = G.copy()
         k      = len(list(G.nodes))
         # drawCustomGraph(G)
